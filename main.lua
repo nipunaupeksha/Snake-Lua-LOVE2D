@@ -1,6 +1,6 @@
 --time in seconds that the snake moves one tile
 SNAKE_SPEED = 0.1
-
+local largeFont =love.graphics.newFont(32) 
 local score = 0 
 TILE_SIZE = 32
 WINDOW_WIDTH = 1280
@@ -31,6 +31,7 @@ local snakeTimer = 0
 
 function love.load()
     love.window.setTitle('snake50') 
+    love.graphics.setFont(largeFont)
     love.window.setMode(WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false
     })
@@ -85,10 +86,26 @@ function love.update(dt)
         end
        end
 
-       tileGrid[snakeY][snakeX] = TILE_SNAKE_HEAD
+       --check for apple and add to score
+       if tileGrid[snakeY][snakeX] == TILE_APPLE then
+            score =score+1
+            local newAppleX,newAppleY = math.random(MAX_TILES_X),math.random(MAX_TILES_Y)
+            tileGrid[newAppleY][newAppleX] = TILE_APPLE
+            --take tail and add to head if greater than 1 segment
+            if #snakeTiles>1 then
+            --otherwise, just add new head segment
+            else
+                table.insert(snakeTiles,1,{snakeX,snakeY})
+                snakeTiles[2] = {priorHeadX,priorHeadY}
+                tileGrid[snakeTiles[2][2]][snakeTiles[2][1]] = TILE_SNAKE_BODY
+            end
+       end
+
+       tileGrid[snakeY][snakeX] = TILE_SNAKE_HEAD 
        
        if #snakeTiles > 1 then
-        --todo
+        tileGrid[snakeTiles[2][2]][snakeTiles[2][1]] = TILE_EMPTY
+        snakeTiles[2]  = {priorHeadX,priorHeadY}
        else
         tileGrid[priorHeadY][priorHeadX]=TILE_EMPTY
        end
@@ -127,7 +144,10 @@ function drawGrid()
                 love.graphics.setColor(1,0,0,1)
                 love.graphics.rectangle('fill', (x-1)*TILE_SIZE, (y-1)*TILE_SIZE, TILE_SIZE,TILE_SIZE)
             elseif tileGrid[y][x] == TILE_SNAKE_HEAD then
-                love.graphics.setColor(0,1,0.1,1)
+                love.graphics.setColor(0,1,0.5,1)
+                love.graphics.rectangle('fill',(x-1)*TILE_SIZE,(y-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
+            elseif tileGrid[y][x] == TILE_SNAKE_BODY then
+                love.graphics.setColor(0,1,0,1)
                 love.graphics.rectangle('fill',(x-1)*TILE_SIZE,(y-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
             end
         end
@@ -149,5 +169,3 @@ function initializeGrid()
     local appleX, appleY = math.random(MAX_TILES_X), math.random(MAX_TILES_Y)
     tileGrid[appleY][appleX] = TILE_APPLE
 end
-
-
