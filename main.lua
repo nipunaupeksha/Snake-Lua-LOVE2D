@@ -11,22 +11,30 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    if kry == 'left' then
+    if key == 'left' then
         snakeMoving = 'left'
-    else if key == 'right' then 
+    elseif key == 'right' then 
         snakeMoving = 'right'
+    elseif key == 'up' then
+        snakeMoving = 'up'
+    elseif key == 'down' then
+        snakeMoving = 'down'
     end
 end
 
 function love.update(dt)
     if snakeMoving == 'left' then
         snakeX = snakeX - SNAKE_SPEED * dt;
-    else 
+    elseif snakeMoving == 'right' then
         snakeX = snakeX + SNAKE_SPEED * dt;
+    elseif snakeMoving == 'up' then 
+        snakeY = snakeY - SNAKE_SPEED * dt;
+    elseif snakeMoving == 'down' then
+        snakeY = snakeY + SNAKE_SPEED * dt;
     end
 end
 
 function love.draw()
     love.graphics.setColor(0,1,0,1)
-    love.graphics.rectangle('fill', snakeX, 0, 16, 16)
+    love.graphics.rectangle('fill', snakeX, snakeY, 16, 16)
 end
