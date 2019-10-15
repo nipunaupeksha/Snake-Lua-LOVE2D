@@ -92,20 +92,28 @@ function love.update(dt)
             local newAppleX,newAppleY = math.random(MAX_TILES_X),math.random(MAX_TILES_Y)
             tileGrid[newAppleY][newAppleX] = TILE_APPLE
             --take tail and add to head if greater than 1 segment
-            if #snakeTiles>1 then
-            --otherwise, just add new head segment
-            else
+            -- if #snakeTiles>1 then
                 table.insert(snakeTiles,1,{snakeX,snakeY})
-                snakeTiles[2] = {priorHeadX,priorHeadY}
-                tileGrid[snakeTiles[2][2]][snakeTiles[2][1]] = TILE_SNAKE_BODY
-            end
+                tileGrid[snakeY][snakeX] = TILE_SNAKE_HEAD
+                tileGrid[priorHeadY][priorHeadX] = TILE_SNAKE_BODY
+            --otherwise, just add new head segment
+            
+            -- else
+            --     table.insert(snakeTiles,1,{snakeX,snakeY})
+            --     snakeTiles[2] = {priorHeadX,priorHeadY}
+            --     tileGrid[snakeTiles[2][2]][snakeTiles[2][1]] = TILE_SNAKE_BODY
+            -- end
        end
 
        tileGrid[snakeY][snakeX] = TILE_SNAKE_HEAD 
        
        if #snakeTiles > 1 then
-        tileGrid[snakeTiles[2][2]][snakeTiles[2][1]] = TILE_EMPTY
-        snakeTiles[2]  = {priorHeadX,priorHeadY}
+        local tail = snakeTiles[#snakeTiles]
+        tileGrid[tail[2]][tail[1]] = TILE_EMPTY
+        tileGrid[priorHeadY][priorHeadX] = TILE_SNAKE_BODY
+        table.insert( snakeTiles,1,{snakeY,snakeX})
+        -- tileGrid[snakeTiles[2][2]][snakeTiles[2][1]] = TILE_EMPTY
+        -- snakeTiles[2]  = {priorHeadX,priorHeadY}
        else
         tileGrid[priorHeadY][priorHeadX]=TILE_EMPTY
        end
@@ -147,7 +155,7 @@ function drawGrid()
                 love.graphics.setColor(0,1,0.5,1)
                 love.graphics.rectangle('fill',(x-1)*TILE_SIZE,(y-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
             elseif tileGrid[y][x] == TILE_SNAKE_BODY then
-                love.graphics.setColor(0,1,0,1)
+                love.graphics.setColor(0,0.5,0,1)
                 love.graphics.rectangle('fill',(x-1)*TILE_SIZE,(y-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
             end
         end
