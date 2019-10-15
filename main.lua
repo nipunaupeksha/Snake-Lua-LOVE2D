@@ -1,6 +1,7 @@
 --time in seconds that the snake moves one tile
 SNAKE_SPEED = 0.1
 
+local score = 0 
 TILE_SIZE = 32
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT =  720
@@ -10,17 +11,21 @@ MAX_TILES_Y = math.floor(WINDOW_HEIGHT / TILE_SIZE) + 1
 
 TILE_EMPTY = 0
 TILE_SNAKE_HEAD = 1 
-TILE_SNAKE_BOFY = 2
+TILE_SNAKE_BODY = 2
 TILE_APPLE = 3
 
 local tileGrid = {}
 
---snake data structure
-local snakeTiles ={
-    {snakeX,snakeY}
-}
+
+
 
 local snakeX, snakeY = 1, 1
+
+--snake data structure
+local snakeTiles ={
+    {snakeX,snakeY} --head
+}
+
 local snakeMoving = 'right'
 local snakeTimer = 0
 
@@ -31,6 +36,7 @@ function love.load()
     })
     math.randomseed(os.time())    
     initializeGrid()
+    tileGrid[snakeTiles[1][2]][snakeTiles[1][1]]=TILE_SNAKE_HEAD
 end
 
 function love.keypressed(key)
@@ -51,18 +57,43 @@ end
 
 function love.update(dt)
     snakeTimer = snakeTimer + dt 
+    local priorHeadX,priorHeadY = snakeX,snakeY
     if snakeTimer >= SNAKE_SPEED then
        if snakeMoving == 'up' then
-        snakeY = snakeY-1
+        if snakeY<=1 then
+            snakeY = MAX_TILES_Y
+        else
+            snakeY = snakeY-1
+        end
        elseif snakeMoving == 'down' then
-        snakeY = snakeY+1
+        if snakeY >= MAX_TILES_Y then
+            snakeY = 1
+        else
+            snakeY = snakeY+1
+        end
        elseif snakeMoving == 'left' then
-        snakeX = snakeX-1
+        if snakeX <= 1 then
+            snakeX = MAX_TILES_X
+        else
+            snakeX = snakeX-1
+        end
        else
-        snakeX = snakeX+1
+        if snakeX>=MAX_TILES_X then
+            snakeX = 0
+        else
+            snakeX = snakeX+1
+        end
        end
 
-       snakeTimer = 0
+       tileGrid[snakeY][snakeX] = TILE_SNAKE_HEAD
+       
+       if #snakeTiles > 1 then
+        --todo
+       else
+        tileGrid[priorHeadY][priorHeadX]=TILE_EMPTY
+       end
+       
+        snakeTimer = 0
 
     end
 
@@ -80,6 +111,8 @@ end
 function love.draw()
     drawGrid()
     --drawSnake()
+    love.graphics.setColor(1,1,1,1)
+    love.graphics.print('Score: ' .. tostring(score),10,10)
 end
 
 function drawGrid()   
