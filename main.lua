@@ -6,15 +6,22 @@ WINDOW_HEIGHT =  720
 
 MAX_TILES_X = WINDOW_WIDTH / TILE_SIZE
 MAX_TILES_Y = math.floor(WINDOW_HEIGHT / TILE_SIZE) + 1
+
+TILE_EMPTY = 0
+TILE_SNAKE_HEAD = 1 
+TILE_SNAKE_BOFY = 2
+TILE_APPLE = 3
+
 local tileGrid = {}
 local snakeX, snakeY = 0, 0
 local snakeMoving = 'right'
 
 function love.load()
-    love.window.setTitle('snake50')
+    love.window.setTitle('snake50') 
     love.window.setMode(WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false
     })
+    initializeGrid()
 end
 
 function love.keypressed(key)
@@ -50,11 +57,18 @@ function love.draw()
     drawSnake()
 end
 
-function drawGrid()
-    love.graphics.setColor(0,1,1,1)
+function drawGrid()   
     for y = 1,MAX_TILES_Y do
         for x = 1, MAX_TILES_X do
-            love.graphics.rectangle('line',(x-1)*TILE_SIZE,(y-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
+            if tileGrid[y][x]==TILE_EMPTY then
+                --change the color to white for the grid
+                love.graphics.setColor(1,1,1,1)
+                love.graphics.rectangle('line', (x-1)*TILE_SIZE, (y-1)*TILE_SIZE, TILE_SIZE,TILE_SIZE)
+            elseif tileGrid[y][x]==TILE_APPLE then 
+                --change the color red for an apple
+                love.graphics.setColor(1,0,0,1)
+                love.graphics.rectangle('fill', (x-1)*TILE_SIZE, (y-1)*TILE_SIZE, TILE_SIZE,TILE_SIZE)
+            end
         end
     end
 end
@@ -63,4 +77,15 @@ function drawSnake()
     love.graphics.setColor(0,1,0,1)
     love.graphics.rectangle('fill', snakeX, snakeY, TILE_SIZE, TILE_SIZE)
 end
+
+function initializeGrid()
+    for y = 1,MAX_TILES_Y do
+        table.insert(tileGrid,{})
+        for x = 1, MAX_TILES_X do
+            table.insert(tileGrid[y],TILE_EMPTY)
+        end
+    end
+    local appleX, appleY = math.random(MAX_TILES_X), math.random(MAX_TILES_Y)
+end
+
 
