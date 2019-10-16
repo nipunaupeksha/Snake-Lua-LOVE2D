@@ -1,11 +1,14 @@
 --time in seconds that the snake moves one tile
-SNAKE_SPEED = 0.1
+local level = 1
+SNAKE_SPEED =math.max(0.01, 0.11 - (level*0.01))
 local largeFont =love.graphics.newFont(32) 
 local hugeFont = love.graphics.newFont(128)
 
 local score = 0 
 local gameOver = false
 local gameStart  = true
+local newLevel = true
+
 
 TILE_SIZE = 32
 WINDOW_WIDTH = 1280
@@ -18,6 +21,7 @@ TILE_EMPTY = 0
 TILE_SNAKE_HEAD = 1 
 TILE_SNAKE_BODY = 2
 TILE_APPLE = 3
+TILE_STONE = 4
 
 local tileGrid = {}
 
@@ -60,10 +64,17 @@ function love.keypressed(key)
         end
     end
     
+    if newLevel then
+        if key == 'space' then
+            newLevel = false
+        end
+    end
+    
     if gameOver or gameStart then 
         if key == 'enter' or key == 'return' then
             initializeGrid()
             initializeSnake()
+            
             score = 0
             gameOver = false
             gameStart = false
@@ -77,10 +88,11 @@ function initializeSnake()
     snakeTiles = {
         {snakeX,snakeY}
     }
+    tileGrid[snakeTiles[1][2]][snakeTiles[1][1]]=TILE_SNAKE_HEAD
 end
 
 function love.update(dt)
-    if not gameOver then
+    if not gameOver and not newLevel then
         snakeTimer = snakeTimer + dt 
         local priorHeadX,priorHeadY = snakeX,snakeY
         if snakeTimer >= SNAKE_SPEED then
@@ -112,25 +124,37 @@ function love.update(dt)
 
         --push a new head  element onto the sanke data structure
             table.insert(snakeTiles,1,{snakeX,snakeY})
-            if tileGrid[snakeY][snakeX] == TILE_SNAKE_BODY then
+            if tileGrid[snakeY][snakeX] == TILE_SNAKE_BODY or 
+            tileGrid[snakeY][snakeX] == TILE_STONE then
                 gameOver =true
             --if we are eating an apple
             elseif tileGrid[snakeY][snakeX] == TILE_APPLE then
                 score=score+1
-                local appleX,appleY = math.random(MAX_TILES_X),math.random(MAX_TILES_Y)
-                tileGrid[appleY][appleX] = TILE_APPLE
+                if score> level*math.ceil(level/2)*3 then
+                    level=level+1
+                    SNAKE_SPEED = math.max(0.01,0.11-(level*0.01))
+                    newLevel = true
+                    initializeGrid()
+                    initializeSnake()
+                    return
+                end
+
+                generateObstacle(TILE_APPLE)
+                -- local appleX,appleY = math.random(MAX_TILES_X),math.random(MAX_TILES_Y)
+                -- tileGrid[appleY][appleX] = TILE_APPLE
             else
                 local tail = snakeTiles[#snakeTiles]
                 tileGrid[tail[2]][tail[1]] = TILE_EMPTY
                 table.remove(snakeTiles)
             end
 
-            if #snakeTiles>1 then
-                tileGrid[priorHeadY][priorHeadX]=TILE_SNAKE_BODY
+            if not gameOver then
+                if #snakeTiles>1 then
+                    tileGrid[priorHeadY][priorHeadX]=TILE_SNAKE_BODY
+                end
+
+                tileGrid[snakeY][snakeX] = TILE_SNAKE_HEAD
             end
-
-            tileGrid[snakeY][snakeX] = TILE_SNAKE_HEAD
-
             snakeTimer = 0
 
         end
@@ -143,14 +167,26 @@ function love.draw()
         love.graphics.printf('SNAKE',0,WINDOW_HEIGHT/2-64,WINDOW_WIDTH,'center')
         love.graphics.setFont(largeFont)
         love.graphics.printf('Press Enter to Start',0,WINDOW_HEIGHT/2+96,WINDOW_WIDTH,'center')
+    elseif newLevel then
+        love.graphics.setFont(hugeFont)
+        love.graphics.printf('LEVEL ' .. tostring(level),0,WINDOW_HEIGHT/2-64,WINDOW_WIDTH,'center')
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('Press Enter to Start',0,WINDOW_HEIGHT/2+96,WINDOW_WIDTH,'center')
     else
         drawGrid()
         love.graphics.setColor(1,1,1,1)
         love.graphics.print('Score: ' .. tostring(score),10,10)
-        if gameOver then 
+        love.graphics.setColor(1,1,1,1)
+        love.graphics.printf('Level: ' .. tostring(level),-10,10,WINDOW_WIDTH,'right')
+        if newLevel then
+            love.graphics.setFont(hugeFont)
+            love.graphics.printf('LEVEL ' .. tostring(level),0,WINDOW_HEIGHT/2-64,WINDOW_WIDTH,'center')
+            love.graphics.setFont(largeFont)
+            love.graphics.printf('Press SPACE to Start',0,WINDOW_HEIGHT/2+96,WINDOW_WIDTH,'center')
+        elseif gameOver then 
             drawGameOver()
         end
-    end
+    end 
 end
 
 function drawGameOver() 
@@ -175,6 +211,9 @@ function drawGrid()
             elseif tileGrid[y][x] == TILE_SNAKE_BODY then
                 love.graphics.setColor(0,0.5,0,1)
                 love.graphics.rectangle('fill',(x-1)*TILE_SIZE,(y-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
+            elseif tileGrid[y][x] == TILE_STONE then
+                love.graphics.setColor(0.8,0.8,0.8,1)
+                love.graphics.rectangle('fill',(x-1)*TILE_SIZE,(y-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
             end
         end
     end
@@ -188,6 +227,20 @@ function initializeGrid()
             table.insert(tileGrid[y],TILE_EMPTY)
         end
     end
-    local appleX, appleY = math.random(MAX_TILES_X), math.random(MAX_TILES_Y)
-    tileGrid[appleY][appleX] = TILE_APPLE
+
+    for i=1,math.min(50,level*2) do
+        generateObstacle(TILE_STONE)
+    end
+    generateObstacle(TILE_APPLE)
+    -- local appleX, appleY = math.random(MAX_TILES_X), math.random(MAX_TILES_Y)
+    -- tileGrid[appleY][appleX] = TILE_APPLE
+end
+
+function generateObstacle(obstacle)
+    local obstacleX,obstacleY
+    repeat
+        obstacleX,obstacleY = math.random(MAX_TILES_X),math.random(MAX_TILES_Y)
+    until tileGrid[obstacleY][obstacleX]==TILE_EMPTY
+
+    tileGrid[obstacleY][obstacleX] = obstacle
 end
