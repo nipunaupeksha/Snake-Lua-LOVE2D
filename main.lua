@@ -5,6 +5,7 @@ local hugeFont = love.graphics.newFont(128)
 
 local score = 0 
 local gameOver = false
+local gameStart  = true
 
 TILE_SIZE = 32
 WINDOW_WIDTH = 1280
@@ -47,14 +48,16 @@ function love.keypressed(key)
         love.event.quit()
     end
 
-    if key == 'left' and snakeMoving~='right' then
-        snakeMoving = 'left'
-    elseif key == 'right' and snakeMoving~='left' then 
-        snakeMoving = 'right'
-    elseif key == 'up' and snakeMoving~='down' then
-        snakeMoving = 'up'
-    elseif key == 'down' and snakeMoving~='up' then
-        snakeMoving = 'down'
+    if not gameOver then
+        if key == 'left' and snakeMoving~='right' then
+            snakeMoving = 'left'
+        elseif key == 'right' and snakeMoving~='left' then 
+            snakeMoving = 'right'
+        elseif key == 'up' and snakeMoving~='down' then
+            snakeMoving = 'up'
+        elseif key == 'down' and snakeMoving~='up' then
+            snakeMoving = 'down'
+        end
     end
     
     if gameOver then 
