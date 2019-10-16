@@ -60,12 +60,13 @@ function love.keypressed(key)
         end
     end
     
-    if gameOver then 
+    if gameOver or gameStart then 
         if key == 'enter' or key == 'return' then
             initializeGrid()
             initializeSnake()
             score = 0
             gameOver = false
+            gameStart = false
         end
     end
 end
@@ -137,11 +138,18 @@ function love.update(dt)
 end
 
 function love.draw()
-    drawGrid()
-    love.graphics.setColor(1,1,1,1)
-    love.graphics.print('Score: ' .. tostring(score),10,10)
-    if gameOver then 
-        drawGameOver()
+    if gameStart then
+        love.graphics.setFont(hugeFont)
+        love.graphics.printf('SNAKE',0,WINDOW_HEIGHT/2-64,WINDOW_WIDTH,'center')
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('Press Enter to Start',0,WINDOW_HEIGHT/2+96,WINDOW_WIDTH,'center')
+    else
+        drawGrid()
+        love.graphics.setColor(1,1,1,1)
+        love.graphics.print('Score: ' .. tostring(score),10,10)
+        if gameOver then 
+            drawGameOver()
+        end
     end
 end
 
